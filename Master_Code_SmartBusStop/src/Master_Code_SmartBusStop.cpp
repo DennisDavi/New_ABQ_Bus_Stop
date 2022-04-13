@@ -11,15 +11,14 @@
  * Date:
  */
 #include "Grove-Ultrasonic-Ranger.h"
-#include <Adafruit_MQTT.h>
-#include "Adafruit_MQTT/Adafruit_MQTT.h"
+//#include <Adafruit_MQTT.h>
 #include "Adafruit_MQTT_SPARK.h"
 #include "TCreds.h"
 
 void setup();
 void loop();
 void MQTT_connect();
-#line 13 "/Users/Abeyta/Documents/IoT/New_ABQ_Bus_Stop/Master_Code_SmartBusStop/src/Master_Code_SmartBusStop.ino"
+#line 12 "/Users/Abeyta/Documents/IoT/New_ABQ_Bus_Stop/Master_Code_SmartBusStop/src/Master_Code_SmartBusStop.ino"
 const int FLAMEPIN = A2;
 const int FLAMEPINDIGITAL = D6;
 const int MQ4ANALOGPIN = A3;
@@ -103,22 +102,22 @@ void loop() {
     //     }
     // }
 
-    // long RangeInCentimeters;
+    long RangeInCentimeters;
 
-    // currentTime1 = millis();
-    // if ((currentTime1 - lastTime1) > 1000) {
-    //     Serial.println("The distance to obstacles in front is: ");
-    //     RangeInCentimeters = ultrasonic.MeasureInCentimeters(); // two measurements should keep an interval
-    //     //Serial.print(RangeInCentimeters);                       // 0~400cm
+    currentTime1 = millis();
+    if ((currentTime1 - lastTime1) > 1000) {
+        Serial.println("The distance to obstacles in front is: ");
+        RangeInCentimeters = ultrasonic.MeasureInCentimeters(); // two measurements should keep an interval
+        //Serial.print(RangeInCentimeters);                       // 0~400cm
         
 
-    //      if(mqtt.Update()) {
-    //     mqttObj1.publish(RangeInCentimeters);
-    //     Serial.printf("Publishing  %i \n",RangeInCentimeters);
-    //     Serial.println(" cm");
-    //     lastTime1 = millis();
-    //      }
-    // }
+         if(mqtt.Update()) {
+        mqttObj1.publish(RangeInCentimeters);
+        Serial.printf("Publishing  %i \n",RangeInCentimeters);
+        Serial.println(" cm");
+        lastTime1 = millis();
+         }
+    }
 
     currentTime2 = millis();
     if ((currentTime2 - lastTime2) > 1000) {
