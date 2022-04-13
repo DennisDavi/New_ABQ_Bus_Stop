@@ -5,7 +5,7 @@
  * Date:
  */
 #include "Grove-Ultrasonic-Ranger.h"
-//#include <Adafruit_MQTT.h>
+#include <Adafruit_MQTT.h>
 #include "Adafruit_MQTT_SPARK.h"
 #include "TCreds.h"
 
@@ -95,7 +95,7 @@ void loop() {
     long RangeInCentimeters;
 
     currentTime1 = millis();
-    if ((currentTime1 - lastTime1) > 1000) {
+    if ((currentTime1 - lastTime1) > 5000) {
         Serial.println("The distance to obstacles in front is: ");
         RangeInCentimeters = ultrasonic.MeasureInCentimeters(); // two measurements should keep an interval
         //Serial.print(RangeInCentimeters);                       // 0~400cm
@@ -103,14 +103,14 @@ void loop() {
 
          if(mqtt.Update()) {
         mqttObj1.publish(RangeInCentimeters);
-        Serial.printf("Publishing  %i \n",RangeInCentimeters);
-        Serial.println(" cm");
+        Serial.printf("Publishing  %i",RangeInCentimeters);
+        Serial.println("cm\n");
         lastTime1 = millis();
          }
     }
 
     currentTime2 = millis();
-    if ((currentTime2 - lastTime2) > 1000) {
+    if ((currentTime2 - lastTime2) > 5000) {
 
         flameSensor = analogRead(FLAMEPIN);
         if (flameSensor < 1500) {
@@ -124,12 +124,12 @@ void loop() {
         lastTime2 = millis();
     }
     currentTime3= millis();
-    if ((currentTime3 - lastTime3) > 2000) {
+    if ((currentTime3 - lastTime3) > 5000) {
         mq4Analog = analogRead(MQ4ANALOGPIN);
         mq4Digital = analogRead(MQ4DIGITALPIN);
         if(mqtt.Update()) {
         mqttObj3.publish(mq4Analog);
-        Serial.printf("Publishing MQ4ANALOGPIN: %i \n",mq4Analog);
+        Serial.printf("Publishing Methane level:: %i \n",mq4Analog);
         }
 
         // indoor reading: 1800-2100 by an exhaust is around 3200-3400
@@ -141,15 +141,18 @@ void loop() {
     nightLed = map(diodeState,120,195,255,-0);
 
     currentTime4 = millis();
-    if((currentTime4-lastTime4)>2000){
+    if((currentTime4-lastTime4)>5000){
       if(mqtt.Update()) {
-        mqttObj4.publish(diodeState, nightLed);
-        Serial.printf("Publishing diodeState%inightLed:%i \n",diodeState, nightLed);
+        mqttObj4.publish(nightLed);
+        Serial.printf("Publishing Daylight Sensor:%i \n",diodeState);
         }
-    Serial.printf("diode State:%i conversion:%i\n", diodeState,nightLed);
     lastTime4 =millis();
     }
-     analogWrite(LEDPIN,nightLed);
+    currentTime5 = millis();
+    if((currentTime5-lastTime5)>1000){
+      analogWrite(LEDPIN,nightLed);
+      lastTime5 = millis();
+    }
 }
 
 
