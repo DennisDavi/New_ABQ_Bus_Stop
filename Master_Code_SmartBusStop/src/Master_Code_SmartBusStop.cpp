@@ -56,10 +56,10 @@ TCPClient TheClient;
 Adafruit_MQTT_SPARK mqtt(&TheClient, AIO_SERVER, AIO_SERVERPORT, AIO_USERNAME, AIO_KEY);
 
 //Adafruit_MQTT_Publish mqttObj = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/abq_gps");
-Adafruit_MQTT_Publish mqttObj1 = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/Trash can Fullness");
-Adafruit_MQTT_Publish mqttObj2 = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/Fire Sensor");
-Adafruit_MQTT_Publish mqttObj3 = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/Methane Sensor");
-Adafruit_MQTT_Publish mqttObj4 = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/Daylight Sensor");
+Adafruit_MQTT_Publish mqttObj1 = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/Trash_can_Fullness");
+Adafruit_MQTT_Publish mqttObj2 = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/Fire_Sensor");
+Adafruit_MQTT_Publish mqttObj3 = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/Methane_Sensor");
+Adafruit_MQTT_Publish mqttObj4 = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/Daylight_Sensor");
 
 
 Adafruit_MQTT_Subscribe mqttON_OFFobject = Adafruit_MQTT_Subscribe(&mqtt, AIO_USERNAME "/feeds/ON_OFF");
@@ -95,15 +95,14 @@ void loop() {
   //   }
 
     // this is our 'wait for incoming subscription packets' busy subloop
-    Adafruit_MQTT_Subscribe *subscription;
-    while ((subscription = mqtt.readSubscription(100))) {
-        if (subscription == &mqttON_OFFobject) {
-            ON_OFF = atof((char *)mqttON_OFFobject.lastread);
-            Serial.printf("Received %i from Adafruit.io feed FeedNameB \n", ON_OFF);
-        }
-    }
+    // Adafruit_MQTT_Subscribe *subscription;
+    // while ((subscription = mqtt.readSubscription(100))) {
+    //     if (subscription == &mqttON_OFFobject) {
+    //         ON_OFF = atof((char *)mqttON_OFFobject.lastread);
+    //         Serial.printf("Received %i from Adafruit.io feed FeedNameB \n", ON_OFF);
+    //     }
+    // }
 
-    long RangeInInches;
     long RangeInCentimeters;
 
     currentTime1 = millis();
@@ -140,12 +139,12 @@ void loop() {
         mq4Analog = analogRead(MQ4ANALOGPIN);
         mq4Digital = analogRead(MQ4DIGITALPIN);
         if(mqtt.Update()) {
-        mqttObj3.publish(MQ4ANALOGPIN);
-        Serial.printf("Publishing MQ4ANALOGPIN: %i \n",MQ4ANALOGPIN);
+        mqttObj3.publish(mq4Analog);
+        Serial.printf("Publishing MQ4ANALOGPIN: %i \n",mq4Analog);
         }
 
         // indoor reading: 1800-2100 by an exhaust is around 3200-3400
-        Serial.printf("mq4 Analog Read:%imq Digital Read:%i\n", mq4Analog, mq4Digital);
+        Serial.printf("mq4 Analog Read:%i\n", mq4Analog);
         lastTime3 = millis();
     }
 
@@ -178,7 +177,7 @@ void MQTT_connect() {
     while ((ret = mqtt.connect()) != 0) { // connect will return 0 for connected
         Serial.printf("%s\n", (char *)mqtt.connectErrorString(ret));
         Serial.printf("Retrying MQTT connection in 5 seconds..\n");
-        mqtt.disconnect();
+        //mqtt.disconnect();
         delay(5000); // wait 5 seconds
     }
     Serial.printf("MQTT Connected!\n");
