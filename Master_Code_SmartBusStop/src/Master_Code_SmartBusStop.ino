@@ -8,7 +8,7 @@
 #include <Adafruit_MQTT.h>
 #include "Adafruit_MQTT/Adafruit_MQTT.h"
 #include "Adafruit_MQTT_SPARK.h"
-#include "tomsCreds.h"
+#include "TCreds.h"
 
 const int FLAMEPIN = A2;
 const int FLAMEPINDIGITAL = D6;
