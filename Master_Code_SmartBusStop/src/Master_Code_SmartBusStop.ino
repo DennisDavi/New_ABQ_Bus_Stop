@@ -39,7 +39,7 @@ geo locations[13];
 
 
 
-Ultrasonic ultrasonic(A2);
+Ultrasonic ultrasonic(A1);
 
 TCPClient TheClient;
 

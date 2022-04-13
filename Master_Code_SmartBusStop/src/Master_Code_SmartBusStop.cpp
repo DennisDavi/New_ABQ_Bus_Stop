@@ -49,7 +49,7 @@ geo locations[13];
 
 
 
-Ultrasonic ultrasonic(A2);
+Ultrasonic ultrasonic(A1);
 
 TCPClient TheClient;
 
@@ -103,22 +103,22 @@ void loop() {
     //     }
     // }
 
-    long RangeInCentimeters;
+    // long RangeInCentimeters;
 
-    currentTime1 = millis();
-    if ((currentTime1 - lastTime1) > 1000) {
-        Serial.println("The distance to obstacles in front is: ");
-        RangeInCentimeters = ultrasonic.MeasureInCentimeters(); // two measurements should keep an interval
-        //Serial.print(RangeInCentimeters);                       // 0~400cm
+    // currentTime1 = millis();
+    // if ((currentTime1 - lastTime1) > 1000) {
+    //     Serial.println("The distance to obstacles in front is: ");
+    //     RangeInCentimeters = ultrasonic.MeasureInCentimeters(); // two measurements should keep an interval
+    //     //Serial.print(RangeInCentimeters);                       // 0~400cm
         
 
-         if(mqtt.Update()) {
-        mqttObj1.publish(RangeInCentimeters);
-        Serial.printf("Publishing  %i \n",RangeInCentimeters);
-        Serial.println(" cm");
-        lastTime1 = millis();
-         }
-    }
+    //      if(mqtt.Update()) {
+    //     mqttObj1.publish(RangeInCentimeters);
+    //     Serial.printf("Publishing  %i \n",RangeInCentimeters);
+    //     Serial.println(" cm");
+    //     lastTime1 = millis();
+    //      }
+    // }
 
     currentTime2 = millis();
     if ((currentTime2 - lastTime2) > 1000) {
