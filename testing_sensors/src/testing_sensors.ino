@@ -69,7 +69,7 @@ buttonState = digitalRead(button);
 AQSensor = analogRead(AQpin);
 
 if(millis()-lastTime>1000){
- Serial.printf("MQ-7: %i\n", mqSensor);
+ Serial.printf("MQ-4: %i\n", mqSensor);
 // Serial.printf("button:%i\n",buttonState);
  Serial.printf("AQSensor%i\n",AQSensor);
 Serial.printf("Temp F:%0.2f\n",tempF);
