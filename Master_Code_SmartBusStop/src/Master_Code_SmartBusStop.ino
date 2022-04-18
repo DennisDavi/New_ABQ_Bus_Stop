@@ -8,6 +8,7 @@
 #include <Adafruit_MQTT.h>
 #include "Adafruit_MQTT_SPARK.h"
 #include "TCreds.h"
+#include "Adafruit_BME280.h"
 
 Ultrasonic ultrasonic(A0);
 const int FLAMEPIN = A1;
@@ -21,7 +22,9 @@ const int EMERGENCYBUTTON = D4;
 const int LEDPIN = D5;
 const int FLAMEPINDIGITAL = D6;
 const int MOTIONSENSOR = D7; 
+const int FANPIN = D8;
 
+Adafruit_BME280 bme;
 
 int flameSensor;
 int currentTime, currentTime1, currentTime2, currentTime3, currentTime4, currentTime5, currentTime6;
@@ -32,6 +35,9 @@ int nightLed;
 int motion;
 int aqSensor;
 int button;
+float tempC, tempF;
+int hexAddress = 0x76;
+bool status;
 
 
 // delete after published is established
@@ -80,8 +86,17 @@ void setup() {
 
      // Setup MQTT subscription for onoff feed.
     mqtt.subscribe(&mqttON_OFFobject);
+
+    status = bme.begin(hexAddress);
+    if (status == false) {
+        Serial.printf("BME280 at address 0x%02X failed to start", hexAddress);
+    }
+
 }
 void loop() {
+    tempC = bme.readTemperature();
+    tempF = tempC * (9.0/5.0)+32.2;
+    
 
    MQTT_connect();
   // currentTime = millis();
@@ -170,6 +185,12 @@ void loop() {
      if((currentTime6 - lastTime6)> 10000){
          Serial.printf("Air Quality Sensor:%i\n",aqSensor);
          lastTime6 =millis();
+     }
+
+     if (tempF>80 && aqSensor<2000){
+         digitalWrite(FANPIN,HIGH);
+     }else{
+         digitalWrite(FANPIN,LOW);
      }
 }
 
