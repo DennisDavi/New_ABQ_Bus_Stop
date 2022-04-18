@@ -9,19 +9,30 @@
 #include "Adafruit_MQTT_SPARK.h"
 #include "TCreds.h"
 
-const int FLAMEPIN = A2;
+Ultrasonic ultrasonic(A0);
+const int FLAMEPIN = A1;
+const int MQ4ANALOGPIN = A2;
+const int MQ7ANALOGPIN = A3;
+const int PHOTODIODEPIN = A4;
+const int AQPIN = A5;
+const int LOADCELL = D2;
+const int FANPIN = D3;
+const int EMERGENCYBUTTON = D4;
+const int LEDPIN = D5;
 const int FLAMEPINDIGITAL = D6;
-const int MQ4ANALOGPIN = A3;
-const int MQ4DIGITALPIN = D5;
-const int DIODEPIN = A4;
-const int LEDPIN = A5;
+const int MOTIONSENSOR = D7; 
+
 
 int flameSensor;
-int currentTime, currentTime1, currentTime2, currentTime3, currentTime4, currentTime5;
-int lastTime, lastTime1, lastTime2, lastTime3, lastTime4,lastTime5;
+int currentTime, currentTime1, currentTime2, currentTime3, currentTime4, currentTime5, currentTime6;
+int lastTime, lastTime1, lastTime2, lastTime3, lastTime4,lastTime5, lastTime6;
 int mq4Digital, mq4Analog;
 int diodeState;
 int nightLed;
+int motion;
+int aqSensor;
+int button;
+
 
 // delete after published is established
 int value1 = 102; 
@@ -38,7 +49,7 @@ geo locations[13];
 
 
 
-Ultrasonic ultrasonic(A1);
+
 
 TCPClient TheClient;
 
@@ -59,8 +70,7 @@ void setup() {
     Serial.begin(9600);
     pinMode(FLAMEPIN, INPUT);
     pinMode(MQ4ANALOGPIN, INPUT);
-    pinMode(MQ4DIGITALPIN, INPUT);
-    pinMode(DIODEPIN, INPUT);
+    pinMode(PHOTODIODEPIN, INPUT);
     pinMode(LEDPIN, OUTPUT);
 
      WiFi.connect();
@@ -92,6 +102,8 @@ void loop() {
     //     }
     // }
 
+   
+
     long RangeInCentimeters;
 
     currentTime1 = millis();
@@ -110,7 +122,7 @@ void loop() {
     }
 
     currentTime2 = millis();
-    if ((currentTime2 - lastTime2) > 5000) {
+    if ((currentTime2 - lastTime2) > 1000) {
 
         flameSensor = analogRead(FLAMEPIN);
         if (flameSensor < 1500) {
@@ -126,7 +138,6 @@ void loop() {
     currentTime3= millis();
     if ((currentTime3 - lastTime3) > 5000) {
         mq4Analog = analogRead(MQ4ANALOGPIN);
-        mq4Digital = analogRead(MQ4DIGITALPIN);
         if(mqtt.Update()) {
         mqttObj3.publish(mq4Analog);
         Serial.printf("Publishing Methane level:: %i \n",mq4Analog);
@@ -137,7 +148,7 @@ void loop() {
         lastTime3 = millis();
     }
 
-    diodeState = analogRead(DIODEPIN);
+    diodeState = analogRead(PHOTODIODEPIN);
     nightLed = map(diodeState,120,195,255,-0);
 
     currentTime4 = millis();
@@ -153,6 +164,13 @@ void loop() {
       analogWrite(LEDPIN,nightLed);
       lastTime5 = millis();
     }
+
+     aqSensor = analogRead(AQPIN);
+     currentTime6 = millis();
+     if((currentTime6 - lastTime6)> 10000){
+         Serial.printf("Air Quality Sensor:%i\n",aqSensor);
+         lastTime6 =millis();
+     }
 }
 
 
