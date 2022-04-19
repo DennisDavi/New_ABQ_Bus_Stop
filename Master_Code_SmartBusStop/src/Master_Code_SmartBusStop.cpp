@@ -16,18 +16,20 @@
 //#include "TCreds.h"
 #include <Adafruit_MQTT.h>
 #include <math.h>
+#include "neopixel.h"
+#include "HX711.h"
 
 
 void setup();
 void loop();
-#line 15 "c:/Users/DennisDavis/Documents/IoT/New_ABQ_Bus_Stop/Master_Code_SmartBusStop/src/Master_Code_SmartBusStop.ino"
+#line 17 "c:/Users/DennisDavis/Documents/IoT/New_ABQ_Bus_Stop/Master_Code_SmartBusStop/src/Master_Code_SmartBusStop.ino"
 Ultrasonic ultrasonic(A0);
-const int FLAMEPIN = A1;
-const int MQ4ANALOGPIN = A2;
+const int MQ4ANALOGPIN = A1;
+const int FLAMEPIN = A2;
 const int MQ7ANALOGPIN = A3;
 const int PHOTODIODEPIN = A4;
 const int AQPIN = A5;
-const int LOADCELL = D2;
+HX711 loadCell(D2,D13);
  const int FANPIN = D3;
 const int EMERGENCYBUTTON = D4;
 const int LEDPIN = D5;
@@ -41,7 +43,8 @@ int flameSensor;
 int currentTime, currentTime1, currentTime2, currentTime3, currentTime4, currentTime5, currentTime6;
 int lastTime, lastTime1, lastTime2, lastTime3, lastTime4, lastTime5, lastTime6;
 int mq4Digital, mq4Analog;
-int diodeState;
+int mq7analog;
+int diodeNum;
 int nightLed;
 int motion;
 int aqSensor;
@@ -49,6 +52,15 @@ int button;
 float tempC, tempF;
 int hexAddress = 0x76;
 bool status;
+int i;
+int pixelCount = 24;
+int pixelType = WS2812B;
+int pixelBri;
+Adafruit_NeoPixel strip(pixelCount,LEDPIN,pixelType);
+const int CAL_FACTOR=2233;
+const int SAMPLES = 10;
+float weight,rawData,calibration;
+int offset;
 
 // delete after published is established
 int value1 = 102;
@@ -80,10 +92,19 @@ void setup() {
     Serial.begin(9600);
     pinMode(FLAMEPIN, INPUT);
     pinMode(MQ4ANALOGPIN, INPUT);
+    pinMode(MQ7ANALOGPIN,INPUT);
     pinMode(PHOTODIODEPIN, INPUT);
+    pinMode(EMERGENCYBUTTON, INPUT);
     pinMode(LEDPIN, OUTPUT);
     pinMode(AQPIN,INPUT);
     pinMode(FANPIN,OUTPUT);
+    pinMode(LEDPIN,OUTPUT);
+    strip.begin();
+    strip.show();
+
+    loadCell.set_scale();
+    loadCell.tare();
+    loadCell.set_scale(CAL_FACTOR);
 
     WiFi.connect();
     while (WiFi.connecting()) {
@@ -101,6 +122,27 @@ void setup() {
 void loop() {
     tempC = bme.readTemperature();
     tempF = tempC * (9.0/5.0)+32.2;
+
+    diodeNum=analogRead(PHOTODIODEPIN);
+    if (diodeNum>3000){
+        diodeNum=3000;
+    }
+    if (diodeNum<80){
+        diodeNum=80;
+    }
+
+    pixelBri = map(diodeNum,80, 3000, 255, 0);
+    for (i=0; i<24; i++){
+        strip.setBrightness(pixelBri);
+        strip.setPixelColor(i,255,255,255);
+        strip.show();
+    }
+    //Serial.printf("diode:%i\n",diodeNum);
+
+    button=digitalRead(EMERGENCYBUTTON);
+    if (button == 1){
+    Serial.printf("Emergency button has been pressed.\n",button);
+    }
 
    // MQTT_connect();
     // currentTime = millis();
@@ -121,20 +163,25 @@ void loop() {
     //     }
     // }
 
-    long RangeInCentimeters;
-
+    
+    weight = loadCell.get_units(SAMPLES);
+    rawData=loadCell.get_offset();
+    calibration=loadCell.get_scale();
     currentTime1 = millis();
-    if ((currentTime1 - lastTime1) > 5000) {
-        Serial.println("The distance to obstacles in front is: ");
+    if (currentTime1 - lastTime1 > 5000) {
+        long RangeInCentimeters;
         RangeInCentimeters = ultrasonic.MeasureInCentimeters(); // two measurements should keep an interval
+        if (RangeInCentimeters <5 || weight >400){
+         Serial.printf("trash needs to be emptied.\n");
                                                                 // Serial.print(RangeInCentimeters);                       // 0~400cm
 
         // if (mqtt.Update()) {
         //     mqttObj1.publish(RangeInCentimeters);
         //     Serial.printf("Publishing  %i", RangeInCentimeters);
         //     Serial.println("cm\n");
-        //     lastTime1 = millis();
-        // }
+             
+         }
+         lastTime1 = millis();
     }
 
     currentTime2 = millis();
@@ -154,18 +201,16 @@ void loop() {
     currentTime3 = millis();
     if ((currentTime3 - lastTime3) > 5000) {
         mq4Analog = analogRead(MQ4ANALOGPIN);
+        mq7analog = analogRead(MQ7ANALOGPIN);
         // if (mqtt.Update()) {
         //     mqttObj3.publish(mq4Analog);
         //     Serial.printf("Publishing Methane level:: %i \n", mq4Analog);
         // }
 
         // indoor reading: 1800-2100 by an exhaust is around 3200-3400
-        Serial.printf("mq4 Analog Read:%i\n", mq4Analog);
+        Serial.printf("mq4 Analog Read:%i  mq7 Analog Read:%i\n", mq4Analog, mq7analog);
         lastTime3 = millis();
     }
-
-    diodeState = analogRead(PHOTODIODEPIN);
-    nightLed = map(diodeState, 120, 195, 255, -0);
 
     currentTime4 = millis();
     if ((currentTime4 - lastTime4) > 5000) {
