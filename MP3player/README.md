@@ -1,10 +1,10 @@
-# MP3_player
+# MP3player
 
-A Particle project named MP3_player
+A Particle project named MP3player
 
 ## Welcome to your project!
 
-Every new Particle project is composed of 3 important elements that you'll see have been created in your project directory for MP3_player.
+Every new Particle project is composed of 3 important elements that you'll see have been created in your project directory for MP3player.
 
 #### ```/src``` folder:  
 This is the source folder that contains the firmware files for your project. It should *not* be renamed. 
