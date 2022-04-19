@@ -125,10 +125,10 @@ void loop() {
     pixelBri = map(diodeNum,80, 3000, 255, 0);
     for (i=0; i<24; i++){
         strip.setBrightness(pixelBri);
-        strip.setPixelColor(i,255,255,255);
+        strip.setPixelColor(i,255,241,224);
         strip.show();
     }
-    //Serial.printf("diode:%i\n",diodeNum);
+    Serial.printf("diode:%i\n",diodeNum);
 
     button=digitalRead(EMERGENCYBUTTON);
     if (button == 1){
