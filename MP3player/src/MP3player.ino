@@ -35,7 +35,7 @@ void setup()
   }
   Serial.printf("DFPlayer Mini online.\n");
   
-  myDFPlayer.volume(.01);  //Set volume value. From 0 to 30
+  myDFPlayer.volume(0.1);  //Set volume value. From 0 to 30
   i=0;
   timer = -playTime;
 }

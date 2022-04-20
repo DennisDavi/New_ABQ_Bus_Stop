@@ -3,7 +3,7 @@
 /******************************************************/
 
 #include "Particle.h"
-#line 1 "/Users/Abeyta/Documents/IoT/class_slides/ParticleCode/MP3player/src/MP3player.ino"
+#line 1 "c:/Users/DennisDavis/Documents/IoT/New_ABQ_Bus_Stop/MP3player/src/MP3player.ino"
 /*
  * Project MP3player
  * Description: Argon-based code for DFPlayer Mini Player
@@ -16,7 +16,7 @@
 
 void setup();
 void loop();
-#line 11 "/Users/Abeyta/Documents/IoT/class_slides/ParticleCode/MP3player/src/MP3player.ino"
+#line 11 "c:/Users/DennisDavis/Documents/IoT/New_ABQ_Bus_Stop/MP3player/src/MP3player.ino"
 DFRobotDFPlayerMini myDFPlayer;
 void printDetail(uint8_t type, int value);
 const int playTime = 10000;
@@ -44,7 +44,7 @@ void setup()
   }
   Serial.printf("DFPlayer Mini online.\n");
   
-  myDFPlayer.volume(.01);  //Set volume value. From 0 to 30
+  myDFPlayer.volume(0.1);  //Set volume value. From 0 to 30
   i=0;
   timer = -playTime;
 }
