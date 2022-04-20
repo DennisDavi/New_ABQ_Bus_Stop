@@ -30,6 +30,8 @@ Adafruit_BME280 bme;
 float tempC, tempF;
 int hexAddress = 0x76;
 bool status;
+int motionPin=D7;
+int motion;
 
 
 
@@ -41,6 +43,7 @@ void setup() {
   pinMode(AQpin,INPUT);
   pinMode(flamePin,INPUT);
   pinMode(fanPin,OUTPUT);
+  pinMode(motionPin,INPUT);
 
   status = bme.begin(hexAddress);
     if (status == false) {
@@ -67,12 +70,14 @@ void loop() {
 mqSensor = analogRead(mq);
 buttonState = digitalRead(button);
 AQSensor = analogRead(AQpin);
+motion=digitalRead(motionPin);
 
 if(millis()-lastTime>1000){
  Serial.printf("MQ-4: %i\n", mqSensor);
 // Serial.printf("button:%i\n",buttonState);
  Serial.printf("AQSensor%i\n",AQSensor);
 Serial.printf("Temp F:%0.2f\n",tempF);
+Serial.printf("motion:%i\n",motion);
 lastTime=millis();
 if(buttonState==1){
   Serial.printf("Emergancy button has been pressed, please send a response unit to station 1\n",buttonState);

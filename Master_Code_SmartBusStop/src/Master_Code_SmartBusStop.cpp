@@ -3,7 +3,7 @@
 /******************************************************/
 
 #include "Particle.h"
-#line 1 "c:/Users/DennisDavis/Documents/IoT/New_ABQ_Bus_Stop/Master_Code_SmartBusStop/src/Master_Code_SmartBusStop.ino"
+#line 1 "/Users/Abeyta/Documents/IoT/New_ABQ_Bus_Stop/Master_Code_SmartBusStop/src/Master_Code_SmartBusStop.ino"
 /*
  * Project Master_Code_SmartBusStop
  * Description:
@@ -22,12 +22,8 @@
 void setup();
 void loop();
 void MQTT_connect();
-<<<<<<< HEAD
-#line 16 "c:/Users/DennisDavis/Documents/IoT/New_ABQ_Bus_Stop/Master_Code_SmartBusStop/src/Master_Code_SmartBusStop.ino"
-=======
 void flashingLights();
 #line 16 "/Users/Abeyta/Documents/IoT/New_ABQ_Bus_Stop/Master_Code_SmartBusStop/src/Master_Code_SmartBusStop.ino"
->>>>>>> 19def8e558cf47d37cb63ecd34c829686ad20c6d
 Ultrasonic ultrasonic(A0);
 const int MQ4ANALOGPIN = A1;
 const int FLAMEPIN = A2;
@@ -68,18 +64,6 @@ const int SAMPLES = 10;
 float weight, rawData, calibration;
 int offset;
 
-// delete after published is established
-int value1 = 102;
-int ON_OFF;
-struct geo {
-    float lat;
-    float lon;
-    int alt;
-};
-
-geo myLoc;
-geo locations[13];
-
 TCPClient TheClient;
 
 Adafruit_MQTT_SPARK mqtt(&TheClient, AIO_SERVER, AIO_SERVERPORT, AIO_USERNAME, AIO_KEY);
@@ -107,6 +91,7 @@ void setup() {
     pinMode(AQPIN, INPUT);
     pinMode(FANPIN, OUTPUT);
     pinMode(LEDPIN, OUTPUT);
+    pinMode(MOTIONSENSOR, INPUT);
     strip.begin();
     strip.show();
 
@@ -126,7 +111,19 @@ void setup() {
 }
 void loop() {
 
+    MQTT_connect();
+
+    motion = digitalRead(MOTIONSENSOR);
     diodeNum = analogRead(PHOTODIODEPIN);
+    if (millis() - lastTime3 > 2000) {
+        if (motion == 0) {
+            strip.setPixelColor(i, 0, 0, 0);
+            strip.show();
+            Serial.printf("motion:%i\n", motion);
+        }
+        lastTime3 = millis();
+    }
+
     if (diodeNum > 3000) {
         diodeNum = 3000;
     }
@@ -147,27 +144,28 @@ void loop() {
     }
 
     // Ultrasonic Sensor
-    ultraSonicSensor = (((ultrasonic.MeasureInCentimeters() * 100) - 1000) * -1);
+    ultraSonicSensor = (ultrasonic.MeasureInCentimeters());
 
-    MQTT_connect();
-    if (currentTime1 - lastTime1 > 20000) {
+    if ((millis() - lastTime1) > 30000) {
+        mq4Analog = analogRead(MQ4ANALOGPIN);
+        mq7Analog = analogRead(MQ7ANALOGPIN);
+
         mq4Analog = analogRead(MQ4ANALOGPIN);
         mq7Analog = analogRead(MQ7ANALOGPIN);
 
         if (mqtt.Update()) {
 
             // MQ4 & MQ7 Sensors
-            mq4Analog = analogRead(MQ4ANALOGPIN);
-            mq7Analog = analogRead(MQ7ANALOGPIN);
             // indoor reading: 1800-2100 by an exhaust is around 3200-3400
-            mqttMethane.publish(mq4Analog);
-            Serial.printf("Publishing Methane level:: %i \n", mq4Analog);
+
             mqttMethane.publish(mq7Analog);
-            Serial.printf("Publishing Fermaldehyde level:: %i \n", mq7Analog);
+            Serial.printf("Publishing MQ7 level:: %i \n", mq7Analog);
+            mqttAlcohol.publish(mq4Analog);
+            Serial.printf("Publishing MQ4 level:: %i \n", mq4Analog);
 
             // Ultra Sonic
             mqttUltraSonic.publish(ultraSonicSensor);
-            Serial.printf("Publishing Ultra Sonic Sensor  %i", ultraSonicSensor);
+            Serial.printf("Publishing Ultra Sonic Sensor  %i\n", ultraSonicSensor);
 
             // Flame Sensor
             flameSensor = analogRead(FLAMEPIN);
@@ -190,6 +188,7 @@ void loop() {
             Serial.printf("Publishing trash can weight:%i \n", weight);
 
             // Air Quality Sensor
+            AqSensor = analogRead(AQPIN);
             mqttAqSensor.publish(AqSensor);
             Serial.printf("Publishing Air Quality:%i \n", AqSensor);
 
@@ -198,24 +197,18 @@ void loop() {
             tempF = tempC * (9.0 / 5.0) + 32.2;
 
             mqttTemp.publish(tempF);
-            Serial.printf("Publishing temparture:%i \n", tempF);
-
-            mqttTrashIsFull.publish(500);
-            Serial.printf("Publishing TrashIsFull:%i \n", ultraSonicSensor);
+            Serial.printf("Publishing temparture:%0.2f \n", tempF);
 
             lastTime1 = millis();
         }
-
-        currentTime2 = millis();
-        if ((currentTime2 - lastTime) > 20000) {
-            if (ultraSonicSensor < 300 || weight > 400) {
-                if (tempF > 69 && AqSensor < 3000) {
-                    digitalWrite(FANPIN, 1);
-                } else {
-                    digitalWrite(FANPIN, 0);
-                }
-            }
+    }
+    if ((millis() - lastTime2) > 2000) {
+        if (tempF > 69 && AqSensor < 3000) {
+            digitalWrite(FANPIN, 1);
+        } else {
+            digitalWrite(FANPIN, 0);
         }
+        lastTime2 = millis();
     }
 }
 
@@ -240,18 +233,17 @@ void MQTT_connect() {
 
 void flashingLights() {
     strip.clear();
-        for (i = 0; i < 24; i++) {
-            currentTime3 = millis();
-            if ((currentTime3 - lastTime3) > 1000) {
-                strip.setPixelColor(i, 255, 0, 0);
-                lastTime3 = millis();
-            }
-            currentTime4 = millis();
-            if ((currentTime4 - lastTime4) > 1000) {
-                strip.setPixelColor(i, 255, 255, 255);
-                lastTime4 = millis();
-            }
+    for (i = 0; i < 24; i++) {
+        currentTime3 = millis();
+        if ((currentTime3 - lastTime3) > 1000) {
+            strip.setPixelColor(i, 255, 0, 0);
+            lastTime3 = millis();
         }
+        currentTime4 = millis();
+        if ((currentTime4 - lastTime4) > 1000) {
+            strip.setPixelColor(i, 255, 255, 255);
+            lastTime4 = millis();
+        }
+    }
     strip.show();
 }
-    
