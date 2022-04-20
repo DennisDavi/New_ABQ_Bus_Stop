@@ -22,7 +22,12 @@
 void setup();
 void loop();
 void MQTT_connect();
+<<<<<<< HEAD
 #line 16 "c:/Users/DennisDavis/Documents/IoT/New_ABQ_Bus_Stop/Master_Code_SmartBusStop/src/Master_Code_SmartBusStop.ino"
+=======
+void flashingLights();
+#line 16 "/Users/Abeyta/Documents/IoT/New_ABQ_Bus_Stop/Master_Code_SmartBusStop/src/Master_Code_SmartBusStop.ino"
+>>>>>>> 19def8e558cf47d37cb63ecd34c829686ad20c6d
 Ultrasonic ultrasonic(A0);
 const int MQ4ANALOGPIN = A1;
 const int FLAMEPIN = A2;
@@ -41,8 +46,8 @@ Adafruit_BME280 bme;
 int flameSensor;
 int currentTime, currentTime1, currentTime2, currentTime3, currentTime4, currentTime5, currentTime6, currentTime7, currentTime8, currentTime9;
 int lastTime, lastTime1, lastTime2, lastTime3, lastTime4, lastTime5, lastTime6, lastTime7, lastTime8, lastTime9;
-int mq4Digital, mq4Analog;
-int mq7analog;
+int mq4Analog;
+int mq7Analog;
 int diodeNum;
 int nightLed;
 int motion;
@@ -79,17 +84,15 @@ TCPClient TheClient;
 
 Adafruit_MQTT_SPARK mqtt(&TheClient, AIO_SERVER, AIO_SERVERPORT, AIO_USERNAME, AIO_KEY);
 
-// Adafruit_MQTT_Publish mqttObj = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/abq_gps");
 Adafruit_MQTT_Publish mqttUltraSonic = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/Trash_can_Ultrasonic");
 Adafruit_MQTT_Publish mqttFire = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/Fire_Sensor");
 Adafruit_MQTT_Publish mqttMethane = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/Methane_Sensor");
+Adafruit_MQTT_Publish mqttAlcohol = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/MQ7_Sensor");
 Adafruit_MQTT_Publish mqttPhotoDiode = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/Daylight_Sensor");
 Adafruit_MQTT_Publish mqttTemp = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/Temperature");
-Adafruit_MQTT_Publish mqttLoadcell = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/Trash_Can_Loadcell");
+Adafruit_MQTT_Publish mqttLoadCell = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/Trash_Can_Loadcell");
 Adafruit_MQTT_Publish mqttAqSensor = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/Air_Quality_Sensor");
-
-
-Adafruit_MQTT_Subscribe mqttON_OFFobject = Adafruit_MQTT_Subscribe(&mqtt, AIO_USERNAME "/feeds/ON_OFF");
+Adafruit_MQTT_Publish mqttTrashIsFull = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/Trash_Is_Full");
 
 SYSTEM_MODE(SEMI_AUTOMATIC);
 
@@ -116,16 +119,12 @@ void setup() {
         Serial.printf(".");
     }
 
-    // Setup MQTT subscription for onoff feed.
-    mqtt.subscribe(&mqttON_OFFobject);
-
     status = bme.begin(hexAddress);
     if (status == false) {
         Serial.printf("BME280 at address 0x%02X failed to start", hexAddress);
     }
 }
 void loop() {
-    
 
     diodeNum = analogRead(PHOTODIODEPIN);
     if (diodeNum > 3000) {
@@ -141,161 +140,118 @@ void loop() {
         strip.setPixelColor(i, 255, 241, 224);
         strip.show();
     }
-    Serial.printf("diode:%i\n", diodeNum);
 
     button = digitalRead(EMERGENCYBUTTON);
     if (button == 1) {
         Serial.printf("Emergency button has been pressed.\n", button);
     }
 
+    // Ultrasonic Sensor
+    ultraSonicSensor = (((ultrasonic.MeasureInCentimeters() * 100) - 1000) * -1);
+
     MQTT_connect();
-    
-    // currentTime = millis();
-    // if ((currentTime - lastTime) > 6000) {
-    //     if (mqtt.Update()) {
-    //         mqttObj.publish(value1);
-    //         Serial.printf("Publishing test: %i \n", value1);
-    //     }
-    //     lastTime1 = millis();
-    // }
+    if (currentTime1 - lastTime1 > 20000) {
+        mq4Analog = analogRead(MQ4ANALOGPIN);
+        mq7Analog = analogRead(MQ7ANALOGPIN);
 
-    // this is our 'wait for incoming subscription packets' busy subloop
-    Adafruit_MQTT_Subscribe *subscription;
-    // while ((subscription = mqtt.readSubscription(100))) {
-    //     if (subscription == &mqttON_OFFobject) {
-    //         ON_OFF = atof((char *)mqttON_OFFobject.lastread);
-    //         Serial.printf("Received %i from Adafruit.io feed FeedNameB \n", ON_OFF);
-    //     }
-    // }
-
-   
-    
-//Ultrasonic Sensor
-
-   
-    ultraSonicSensor = ((ultrasonic.MeasureInCentimeters() * 100)-10000);
-
-    currentTime1 = millis();
-    if (currentTime1 - lastTime1 > 5000) {
         if (mqtt.Update()) {
-                mqttUltraSonic.publish(ultraSonicSensor);
-                Serial.printf("Publishing  %i", ultraSonicSensor);
-                Serial.println("cm\n");
-            }
-            lastTime1 = millis();
-        }
 
+            // MQ4 & MQ7 Sensors
+            mq4Analog = analogRead(MQ4ANALOGPIN);
+            mq7Analog = analogRead(MQ7ANALOGPIN);
+            // indoor reading: 1800-2100 by an exhaust is around 3200-3400
+            mqttMethane.publish(mq4Analog);
+            Serial.printf("Publishing Methane level:: %i \n", mq4Analog);
+            mqttMethane.publish(mq7Analog);
+            Serial.printf("Publishing Fermaldehyde level:: %i \n", mq7Analog);
 
-//Flame Detector AKA Light sensor
-        currentTime2 = millis();
-        if ((currentTime2 - lastTime2) > 1000) {
+            // Ultra Sonic
+            mqttUltraSonic.publish(ultraSonicSensor);
+            Serial.printf("Publishing Ultra Sonic Sensor  %i", ultraSonicSensor);
+
+            // Flame Sensor
             flameSensor = analogRead(FLAMEPIN);
             if (flameSensor < 1500) {
                 Serial.printf("Flame Detected!");
-                if (mqtt.Update()) {
-                    mqttFire.publish(flameSensor);
-                    Serial.printf("Publishing flameSensor:%i \n", flameSensor);
+                mqttFire.publish(flameSensor);
+                Serial.printf("Publishing flameSensor:%i \n", flameSensor);
+            }
+
+            // Photo Diode Sensor
+            mqttPhotoDiode.publish(diodeNum);
+            Serial.printf("Publishing Daylight Sensor:%i \n", diodeNum);
+
+            weight = loadCell.get_units(SAMPLES);
+            rawData = loadCell.get_offset();
+            calibration = loadCell.get_scale();
+
+            // Load Cell Sensor
+            mqttLoadCell.publish(weight);
+            Serial.printf("Publishing trash can weight:%i \n", weight);
+
+            // Air Quality Sensor
+            mqttAqSensor.publish(AqSensor);
+            Serial.printf("Publishing Air Quality:%i \n", AqSensor);
+
+            // Temperature/BME
+            tempC = bme.readTemperature();
+            tempF = tempC * (9.0 / 5.0) + 32.2;
+
+            mqttTemp.publish(tempF);
+            Serial.printf("Publishing temparture:%i \n", tempF);
+
+            mqttTrashIsFull.publish(500);
+            Serial.printf("Publishing TrashIsFull:%i \n", ultraSonicSensor);
+
+            lastTime1 = millis();
+        }
+
+        currentTime2 = millis();
+        if ((currentTime2 - lastTime) > 20000) {
+            if (ultraSonicSensor < 300 || weight > 400) {
+                if (tempF > 69 && AqSensor < 3000) {
+                    digitalWrite(FANPIN, 1);
+                } else {
+                    digitalWrite(FANPIN, 0);
                 }
             }
-            // Serial.printf("flame sensor:%i DIGITAL:%i\n", flameSensor, FLAMEPINDIGITAL);
-            lastTime2 = millis();
         }
+    }
+}
 
-//MQ4 & MQ7 Sensors
-        currentTime3 = millis();
-        if ((currentTime3 - lastTime3) > 5000) {
-            mq4Analog = analogRead(MQ4ANALOGPIN);
-            mq7analog = analogRead(MQ7ANALOGPIN);
-            if (mqtt.Update()) {
-                mqttMethane.publish(mq4Analog);
-                Serial.printf("Publishing Methane level:: %i \n", mq4Analog);
+void MQTT_connect() {
+    int8_t ret;
+
+    // Stop if already connected.
+    if (mqtt.connected()) {
+        return;
+    }
+
+    Serial.print("Connecting to MQTT... ");
+
+    while ((ret = mqtt.connect()) != 0) { // connect will return 0 for connected
+        Serial.printf("%s\n", (char *)mqtt.connectErrorString(ret));
+        Serial.printf("Retrying MQTT connection in 5 seconds..\n");
+        // mqtt.disconnect();
+        delay(5000); // wait 5 seconds
+    }
+    Serial.printf("MQTT Connected!\n");
+}
+
+void flashingLights() {
+    strip.clear();
+        for (i = 0; i < 24; i++) {
+            currentTime3 = millis();
+            if ((currentTime3 - lastTime3) > 1000) {
+                strip.setPixelColor(i, 255, 0, 0);
+                lastTime3 = millis();
             }
-            // indoor reading: 1800-2100 by an exhaust is around 3200-3400
-            Serial.printf("mq4 Analog Read:%i  mq7 Analog Read:%i\n", mq4Analog, mq7analog);
-            lastTime3 = millis();
-        }
-
-//PhotoDiode Sensor
-        currentTime4 = millis();
-        if ((currentTime4 - lastTime4) > 5000) {
-            if (mqtt.Update()) {
-                mqttPhotoDiode.publish(diodeNum);
-                Serial.printf("Publishing Daylight Sensor:%i \n", diodeNum);
+            currentTime4 = millis();
+            if ((currentTime4 - lastTime4) > 1000) {
+                strip.setPixelColor(i, 255, 255, 255);
                 lastTime4 = millis();
             }
-            
         }
-
-
-//Load Cell 
-        weight = loadCell.get_units(SAMPLES);
-        rawData = loadCell.get_offset();
-        calibration = loadCell.get_scale();
-
-          currentTime5 = millis();
-        if ((currentTime5 - lastTime5) > 3000) {
-            if (mqtt.Update()) {
-                mqttFire.publish(weight);
-                Serial.printf("Publishing temparture:%i \n", weight);
-            lastTime5 = millis();
-        }}
-
-// Air Quality Sensor
-        AqSensor = analogRead(AQPIN);
-        currentTime6 = millis();
-        if ((currentTime6 - lastTime6) > 10000) {
-            Serial.printf("Air Quality Sensor:%i  Temp:%0.2f\n", AqSensor, tempF);
-            lastTime6 = millis();
-            mqttFire.publish(AqSensor);
-            Serial.printf("Publishing temparture:%i \n", AqSensor);
-
-        if (tempF > 71 && AqSensor < 3000) {
-            digitalWrite(FANPIN, 1);
-        } else {
-            digitalWrite(FANPIN, 0);
-        }
-        }
-
-//BME/Temperature Sensor
-        tempC = bme.readTemperature();
-        tempF = tempC * (9.0 / 5.0) + 32.2;
-
-        currentTime8 = millis();
-        if ((currentTime8 - lastTime8) > 3000) {
-            if (mqtt.Update()) {
-                mqttFire.publish(tempF);
-                Serial.printf("Publishing temparture:%i \n", tempF);
-                lastTime8 = millis();
-            }
-        }
-
-
-        currentTime9 = millis();
-        if ((currentTime9 - lastTime9) > 3000) {
-            if(ultraSonicSensor < 3 || weight > 400){
-            if (mqtt.Update()) {
-                mqttFire.publish(500);
-                Serial.printf("Publishing temparture:%i \n", tempF);
-            lastTime9 = millis();
-            }
-        }}
-
+    strip.show();
 }
-    void MQTT_connect() {
-        int8_t ret;
-
-        //Stop if already connected.
-        if (mqtt.connected()) {
-            return;
-        }
-
-        Serial.print("Connecting to MQTT... ");
-
-        while ((ret = mqtt.connect()) != 0) { // connect will return 0 for connected
-            Serial.printf("%s\n", (char *)mqtt.connectErrorString(ret));
-            Serial.printf("Retrying MQTT connection in 5 seconds..\n");
-            // mqtt.disconnect();
-            delay(5000); // wait 5 seconds
-        }
-        Serial.printf("MQTT Connected!\n");
-    }
+    
