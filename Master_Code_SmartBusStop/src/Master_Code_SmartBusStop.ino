@@ -5,6 +5,7 @@
  * Date:
  */
 #include "Adafruit_MQTT_SPARK.h"
+#include "DFRobotDFPlayerMini.h"
 #include "Grove-Ultrasonic-Ranger.h"
 #include "HX711.h"
 #include "TCreds.h"
@@ -12,6 +13,14 @@
 #include <Adafruit_BME280.h>
 #include <Adafruit_MQTT.h>
 #include <math.h>
+
+FRobotDFPlayerMini myDFPlayer;
+void printDetail(uint8_t type, int value);
+const int PLAYTIME = 10000;
+const int NUMBERTRACKS = 1;
+bool status2;
+int timer2;
+int button;
 
 Ultrasonic ultrasonic(A0);
 const int MQ4ANALOGPIN = A1;
@@ -23,7 +32,7 @@ HX711 loadCell(D2, D13);
 const int FANPIN = D3;
 const int EMERGENCYBUTTON = D4;
 const int LEDPIN = D5;
-//const int FLAMEPINDIGITAL = D6;
+// const int FLAMEPINDIGITAL = D6;
 const int MOTIONSENSOR = D6;
 
 Adafruit_BME280 bme;
@@ -71,15 +80,13 @@ Adafruit_MQTT_Publish mqttTrashIsFull = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAM
 
 SYSTEM_MODE(SEMI_AUTOMATIC);
 
-
- unsigned int timer;
- unsigned int timer2;
-    bool redState;
-    
+unsigned int timer;
+unsigned int timer2;
+bool redState;
 
 void setup() {
     Serial.begin(9600);
-   // pinMode(FLAMEPIN, INPUT);
+    // pinMode(FLAMEPIN, INPUT);
     pinMode(MQ4ANALOGPIN, INPUT);
     pinMode(MQ7ANALOGPIN, INPUT);
     pinMode(PHOTODIODEPIN, INPUT);
@@ -92,15 +99,21 @@ void setup() {
     strip.begin();
     strip.show();
 
+    // MP3
+    status2 = myDFPlayer.begin(Serial1, false);
+    myDFPlayer.volume(25); // Set volume value. From 0 to 30
+    i = 0;
+    timer2 = -PLAYTIME;
+    // LOADCELL
     loadCell.set_scale();
     loadCell.tare();
     loadCell.set_scale(CAL_FACTOR);
-
+    // WIFI
     WiFi.connect();
     while (WiFi.connecting()) {
         Serial.printf(".");
     }
-
+    // BME
     status = bme.begin(hexAddress);
     if (status == false) {
         Serial.printf("BME280 at address 0x%02X failed to start", hexAddress);
@@ -110,50 +123,54 @@ void loop() {
 
     MQTT_connect();
 
-    
     diodeNum = analogRead(PHOTODIODEPIN);
-    //Serial.printf("motion:%i\n", motion);
+    // Serial.printf("motion:%i\n", motion);
 
+    motion = digitalRead(MOTIONSENSOR);
 
-        motion = digitalRead(MOTIONSENSOR);
-
-        //  if (diodeNum > 3000) {
-        // diodeNum = 3000;
-        // }
-        // if (diodeNum < 80) {
-        // diodeNum = 80;
-        //  }
-        //  pixelBri = map(diodeNum, 80, 3000, 255, 0);
-        //  for (i = 0; i < 24; i++) {
-        //  strip.setBrightness(pixelBri);
-        //  strip.setPixelColor(i, 255, 241, 224);
-        //   strip.show();
-        //  }
-    //test, now delete
+    //  if (diodeNum > 3000) {
+    // diodeNum = 3000;
+    // }
+    // if (diodeNum < 80) {
+    // diodeNum = 80;
+    //  }
+    //  pixelBri = map(diodeNum, 80, 3000, 255, 0);
+    //  for (i = 0; i < 24; i++) {
+    //  strip.setBrightness(pixelBri);
+    //  strip.setPixelColor(i, 255, 241, 224);
+    //   strip.show();
+    //  }
+    // test, now delete
 
     button = digitalRead(EMERGENCYBUTTON);
-    if(button != oldButton){
-        if(button == true){
+    if (button != oldButton) {
+        if (button == true) {
             onOff = !onOff;
-        } else{
+        } else {
             oldButton = button;
         }
-        Serial.printf("onOff:%i\n",onOff);
+        Serial.printf("onOff:%i\n", onOff);
     }
     if (onOff == 1) {
-    timer2=millis();
-    if(millis()-timer2>10000){
+        timer2 = millis();
+        if (millis() - timer2 > 10000) {
             onOff = false;
-    }
-    if(millis()-timer>1000){
-        redState= !redState; 
-        flashRed();
-        timer=millis();
-    }
+        }
+        if (millis() - timer > 1000) {
+            redState = !redState;
+            flashRed();
+            if (millis() - timer > PLAYTIME) {
+                timer = millis();
+                i++;
+                if (i > NUMBERTRACKS) {
+                    i = 1;
+                }
+                Serial.printf("APD CALLED\n");
+                myDFPlayer.play(i); // Play next mp3 every 3 second.
+            }
+            timer = millis();
+        }
 
-     
-
-       
         Serial.printf("Emergency button has been pressed.\n", button);
     }
 
@@ -216,13 +233,12 @@ void loop() {
             lastTime1 = millis();
         }
     }
-        if (tempF > 69 && AqSensor < 1500) {
-            digitalWrite(FANPIN, 1);
-        } else {
-            digitalWrite(FANPIN, 0);
-        }
+    if (tempF > 69 && AqSensor < 1500) {
+        digitalWrite(FANPIN, 1);
+    } else {
+        digitalWrite(FANPIN, 0);
+    }
 }
-
 
 void MQTT_connect() {
     int8_t ret;
@@ -260,23 +276,73 @@ void flashingLights() {
     strip.show();
 }
 
-void flashRed(){
+void flashRed() {
     int i;
     int j;
-   
 
-    
-
-    for(j=0;j<24;j++){
-        if(redState){
-            strip.setPixelColor(j,0XFF0000);
+    for (j = 0; j < 24; j++) {
+        if (redState) {
+            strip.setPixelColor(j, 0XFF0000);
             strip.setBrightness(20);
             strip.show();
         }
-        if(redState==false){
-            strip.setPixelColor(j,0X0000000);
+        if (redState == false) {
+            strip.setPixelColor(j, 0X0000000);
             strip.setBrightness(20);
             strip.show();
         }
     }
+}
+
+void printDetail(uint8_t type, int value){
+  switch (type) {
+    case TimeOut:
+      Serial.printf("Time Out!\n");
+      break;
+    case WrongStack:
+      Serial.printf("Stack Wrong!\n");
+      break;
+    case DFPlayerCardInserted:
+      Serial.printf("Card Inserted!\n");
+      break;
+    case DFPlayerCardRemoved:
+      Serial.printf("Card Removed!\n");
+      break;
+    case DFPlayerCardOnline:
+      Serial.printf("Card Online!\n");
+      break;
+    case DFPlayerPlayFinished:
+      Serial.printf("Number: %i Play Finished\n",value);
+      break;
+    case DFPlayerError:
+      Serial.printf("DFPlayerError: ");
+      switch (value) {
+        case Busy:
+          Serial.printf("Card not found\n");
+          break;
+        case Sleeping:
+          Serial.printf("Sleeping\n");
+          break;
+        case SerialWrongStack:
+          Serial.printf("Get Wrong Stack\n");
+          break;
+        case CheckSumNotMatch:
+          Serial.printf("Check Sum Not Match\n");
+          break;
+        case FileIndexOut:
+          Serial.printf("File Index Out of Bound\n");
+          break;
+        case FileMismatch:
+          Serial.printf("Cannot Find File\n");
+          break;
+        case Advertise:
+          Serial.printf("In Advertise\n");
+          break;
+        default:
+          break;
+      }
+      break;
+    default:
+      break;
+  }
 }
