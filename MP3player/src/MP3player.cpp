@@ -8,8 +8,8 @@
  * Project MP3player
  * Description: Argon-based code for DFPlayer Mini Player
  *              Note: DFRobotDFPlayer.cpp modified to work on Argon
- * Author: Brian Rashap
- * Date: 14-APR-2022
+ * Author: Thomas Abeyta
+ * Date: 20-APR-2022
  */
 
 #include "DFRobotDFPlayerMini.h"
@@ -19,98 +19,97 @@ void loop();
 #line 11 "/Users/Abeyta/Documents/IoT/New_ABQ_Bus_Stop/MP3player/src/MP3player.ino"
 DFRobotDFPlayerMini myDFPlayer;
 void printDetail(uint8_t type, int value);
-const int playTime = 10000;
-const int numberTracks = 1;
+const int PLAYTIME = 10000;
+const int NUMBERTRACKS = 1;
 const int BUTTONSTATE = D4;
-bool status;
-int i,timer;
+bool status2;
+int p, timer3;
 int button;
 
 SYSTEM_MODE(SEMI_AUTOMATIC);
 
-void setup()
-{
-  Serial1.begin(9600);
-  
-  pinMode(BUTTONSTATE, INPUT);
+void setup() {
+    Serial1.begin(9600);
 
- 
-  status = myDFPlayer.begin(Serial1,false);
- 
-   myDFPlayer.volume(25);  //Set volume value. From 0 to 30
-  // i=0;
-  // timer = -playTime;
+    pinMode(BUTTONSTATE, INPUT);
+
+    status2 = myDFPlayer.begin(Serial1, false);
+
+    myDFPlayer.volume(25); // Set volume value. From 0 to 30
+    p = 0;
+    timer3 = -PLAYTIME;
 }
 
 void loop() {
-  
-  button = digitalRead(BUTTONSTATE);
-   if (button == 1){
-     if (millis() - timer > playTime) {
-    timer = millis();
-    i++;
-    if(i>numberTracks) {
-      i=1;
-    }
-    Serial.printf("Play Next - Track\n");
-    myDFPlayer.play(i);  //Play next mp3 every 3 second.
-  }
-  }
-  
-  // if (myDFPlayer.available()) {
-  //   printDetail(myDFPlayer.readType(), myDFPlayer.read()); //Print the detail message from DFPlayer to handle different errors and states.
-  // }
+
+    // button = digitalRead(BUTTONSTATE);
+    // if (button == 1) {
+    //     if (millis() - timer3 > PLAYTIME) {
+    //         timer3 = millis();
+    //         p++;
+    //         if (p > NUMBERTRACKS) {
+    //             p = 1;
+    //         }
+    //         Serial.printf("Play Next - Track\n");
+            myDFPlayer.play(1); // Play next mp3 every 3 second.
+            delay(6000);
+    //     }
+    // }
+
+    // if (myDFPlayer.available()) {
+    //   printDetail(myDFPlayer.readType(), myDFPlayer.read()); //Print the detail message from DFPlayer to handle different errors and states.
+    // }
 }
 
-void printDetail(uint8_t type, int value){
-  switch (type) {
+void printDetail(uint8_t type, int value) {
+    switch (type) {
     case TimeOut:
-      Serial.printf("Time Out!\n");
-      break;
+        Serial.printf("Time Out!\n");
+        break;
     case WrongStack:
-      Serial.printf("Stack Wrong!\n");
-      break;
+        Serial.printf("Stack Wrong!\n");
+        break;
     case DFPlayerCardInserted:
-      Serial.printf("Card Inserted!\n");
-      break;
+        Serial.printf("Card Inserted!\n");
+        break;
     case DFPlayerCardRemoved:
-      Serial.printf("Card Removed!\n");
-      break;
+        Serial.printf("Card Removed!\n");
+        break;
     case DFPlayerCardOnline:
-      Serial.printf("Card Online!\n");
-      break;
+        Serial.printf("Card Online!\n");
+        break;
     case DFPlayerPlayFinished:
-      Serial.printf("Number: %i Play Finished\n",value);
-      break;
+        Serial.printf("Number: %i Play Finished\n", value);
+        break;
     case DFPlayerError:
-      Serial.printf("DFPlayerError: ");
-      switch (value) {
+        Serial.printf("DFPlayerError: ");
+        switch (value) {
         case Busy:
-          Serial.printf("Card not found\n");
-          break;
+            Serial.printf("Card not found\n");
+            break;
         case Sleeping:
-          Serial.printf("Sleeping\n");
-          break;
+            Serial.printf("Sleeping\n");
+            break;
         case SerialWrongStack:
-          Serial.printf("Get Wrong Stack\n");
-          break;
+            Serial.printf("Get Wrong Stack\n");
+            break;
         case CheckSumNotMatch:
-          Serial.printf("Check Sum Not Match\n");
-          break;
+            Serial.printf("Check Sum Not Match\n");
+            break;
         case FileIndexOut:
-          Serial.printf("File Index Out of Bound\n");
-          break;
+            Serial.printf("File Index Out of Bound\n");
+            break;
         case FileMismatch:
-          Serial.printf("Cannot Find File\n");
-          break;
+            Serial.printf("Cannot Find File\n");
+            break;
         case Advertise:
-          Serial.printf("In Advertise\n");
-          break;
+            Serial.printf("In Advertise\n");
+            break;
         default:
-          break;
-      }
-      break;
+            break;
+        }
+        break;
     default:
-      break;
-  }
+        break;
+    }
 }

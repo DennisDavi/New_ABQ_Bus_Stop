@@ -25,14 +25,10 @@ void loop();
 void MQTT_connect();
 void flashingLights();
 void flashRed();
+void mp3();
 #line 17 "/Users/Abeyta/Documents/IoT/New_ABQ_Bus_Stop/Master_Code_SmartBusStop/src/Master_Code_SmartBusStop.ino"
-FRobotDFPlayerMini myDFPlayer;
+DFRobotDFPlayerMini myDFPlayer;
 void printDetail(uint8_t type, int value);
-const int PLAYTIME = 10000;
-const int NUMBERTRACKS = 1;
-bool status2;
-int timer2;
-int button;
 
 Ultrasonic ultrasonic(A0);
 const int MQ4ANALOGPIN = A1;
@@ -46,9 +42,13 @@ const int EMERGENCYBUTTON = D4;
 const int LEDPIN = D5;
 // const int FLAMEPINDIGITAL = D6;
 const int MOTIONSENSOR = D6;
+const int PLAYTIME = 10000;
+const int NUMBERTRACKS = 1;
 
 Adafruit_BME280 bme;
 
+bool status2;
+int p, timer3;
 int flameSensor;
 int currentTime, currentTime1, currentTime2, currentTime3, currentTime4, currentTime5, currentTime6, currentTime7, currentTime8, currentTime9;
 int lastTime, lastTime1, lastTime2, lastTime3, lastTime4, lastTime5, lastTime6, lastTime7, lastTime8, lastTime9;
@@ -58,7 +58,7 @@ int diodeNum;
 int nightLed;
 int motion;
 int AqSensor;
-bool button;
+int button;
 int oldButton;
 int onOff;
 float tempC, tempF;
@@ -69,6 +69,10 @@ int pixelCount = 24;
 int pixelType = WS2812B;
 int pixelBri;
 int ultraSonicSensor;
+
+unsigned int timer;
+unsigned int timer2;
+bool redState;
 
 Adafruit_NeoPixel strip(pixelCount, LEDPIN, pixelType);
 const int CAL_FACTOR = 2233;
@@ -92,12 +96,9 @@ Adafruit_MQTT_Publish mqttTrashIsFull = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAM
 
 SYSTEM_MODE(SEMI_AUTOMATIC);
 
-unsigned int timer;
-unsigned int timer2;
-bool redState;
-
 void setup() {
     Serial.begin(9600);
+    Serial1.begin(9600);
     // pinMode(FLAMEPIN, INPUT);
     pinMode(MQ4ANALOGPIN, INPUT);
     pinMode(MQ7ANALOGPIN, INPUT);
@@ -113,9 +114,9 @@ void setup() {
 
     // MP3
     status2 = myDFPlayer.begin(Serial1, false);
-    myDFPlayer.volume(25); // Set volume value. From 0 to 30
-    i = 0;
-    timer2 = -PLAYTIME;
+    myDFPlayer.volume(25); //  0 to 30
+    p = 0;
+    timer3 = -PLAYTIME;
     // LOADCELL
     loadCell.set_scale();
     loadCell.tare();
@@ -155,36 +156,38 @@ void loop() {
     // test, now delete
 
     button = digitalRead(EMERGENCYBUTTON);
-    if (button != oldButton) {
-        if (button == true) {
-            onOff = !onOff;
-        } else {
-            oldButton = button;
+    if (button == 1) {
+        if(millis()-lastTime5>6000){
+            Serial.printf("play track");
+            myDFPlayer.play(1);
+            delay(6000);
+            lastTime5;
         }
-        Serial.printf("onOff:%i\n", onOff);
     }
-    if (onOff == 1) {
-        timer2 = millis();
-        if (millis() - timer2 > 10000) {
-            onOff = false;
-        }
-        if (millis() - timer > 1000) {
-            redState = !redState;
-            flashRed();
-            if (millis() - timer > PLAYTIME) {
-                timer = millis();
-                i++;
-                if (i > NUMBERTRACKS) {
-                    i = 1;
-                }
-                Serial.printf("APD CALLED\n");
-                myDFPlayer.play(i); // Play next mp3 every 3 second.
-            }
-            timer = millis();
-        }
 
-        Serial.printf("Emergency button has been pressed.\n", button);
-    }
+    //     if (button == true) {
+    //         onOff = !onOff;
+    //     } else {
+    //         oldButton = button;
+    //     }
+    //     Serial.printf("onOff:%i\n", onOff);
+    // }
+    // if (onOff == 1) {
+    //     timer2 = millis();
+    //     if (millis() - timer2 > 10000) {
+    //         onOff = false;
+    //     }
+    //     if (millis() - timer > 1000) {
+    //         redState = !redState;
+    //         // FLASHRED
+    //         flashRed();
+    //         // mp3
+    //         mp3();
+    //         timer = millis();
+    //     }
+
+    //     Serial.printf("Emergency button has been pressed.\n", button);
+    // }
 
     // Ultrasonic Sensor
     ultraSonicSensor = (ultrasonic.MeasureInCentimeters());
@@ -306,55 +309,67 @@ void flashRed() {
     }
 }
 
-void printDetail(uint8_t type, int value){
-  switch (type) {
+void mp3() {
+    if (millis() - timer3 > PLAYTIME) {
+        timer3 = millis();
+        p++;
+        if (p > NUMBERTRACKS) {
+            p = 1;
+        }
+        Serial.printf("Play Next - Track\n");
+        myDFPlayer.play(p); // Play next mp3 every 3 second.
+    }
+}
+
+void printDetail(uint8_t type, int value) {
+    switch (type) {
     case TimeOut:
-      Serial.printf("Time Out!\n");
-      break;
+        Serial.printf("Time Out!\n");
+        break;
     case WrongStack:
-      Serial.printf("Stack Wrong!\n");
-      break;
+        Serial.printf("Stack Wrong!\n");
+        break;
     case DFPlayerCardInserted:
-      Serial.printf("Card Inserted!\n");
-      break;
+        Serial.printf("Card Inserted!\n");
+        break;
     case DFPlayerCardRemoved:
-      Serial.printf("Card Removed!\n");
-      break;
+        Serial.printf("Card Removed!\n");
+        break;
     case DFPlayerCardOnline:
-      Serial.printf("Card Online!\n");
-      break;
+        Serial.printf("Card Online!\n");
+        break;
     case DFPlayerPlayFinished:
-      Serial.printf("Number: %i Play Finished\n",value);
-      break;
+        Serial.printf("Number: %i Play Finished\n", value);
+        break;
     case DFPlayerError:
-      Serial.printf("DFPlayerError: ");
-      switch (value) {
+        Serial.printf("DFPlayerError: ");
+        switch (value) {
         case Busy:
-          Serial.printf("Card not found\n");
-          break;
+            Serial.printf("Card not found\n");
+            break;
         case Sleeping:
-          Serial.printf("Sleeping\n");
-          break;
+            Serial.printf("Sleeping\n");
+            break;
         case SerialWrongStack:
-          Serial.printf("Get Wrong Stack\n");
-          break;
+            Serial.printf("Get Wrong Stack\n");
+            break;
         case CheckSumNotMatch:
-          Serial.printf("Check Sum Not Match\n");
-          break;
+            Serial.printf("Check Sum Not Match\n");
+            break;
         case FileIndexOut:
-          Serial.printf("File Index Out of Bound\n");
-          break;
+            Serial.printf("File Index Out of Bound\n");
+            break;
         case FileMismatch:
-          Serial.printf("Cannot Find File\n");
-          break;
+            Serial.printf("Cannot Find File\n");
+            break;
         case Advertise:
-          Serial.printf("In Advertise\n");
-          break;
+            Serial.printf("In Advertise\n");
+            break;
         default:
-          break;
-      }
-      break;
+            break;
+        }
+        break;
     default:
-      break;
-  }
+        break;
+    }
 }
