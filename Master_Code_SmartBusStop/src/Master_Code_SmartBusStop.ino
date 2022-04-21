@@ -85,6 +85,8 @@ SYSTEM_MODE(SEMI_AUTOMATIC);
 
 void setup() {
     Serial.begin(9600);
+    Serial1.begin(9600);
+    
     // pinMode(FLAMEPIN, INPUT);
     pinMode(MQ4ANALOGPIN, INPUT);
     pinMode(MQ7ANALOGPIN, INPUT);
@@ -150,7 +152,7 @@ void loop() {
     //             p = 1;
     //         }
     //         Serial.printf("Play Next - Track\n");
-            myDFPlayer.play(1);
+          
     //     }
     // }
 
@@ -299,14 +301,9 @@ void flashRed() {
 }
 
 void mp3() {
-    if (millis() - timer3 > PLAYTIME) {
-        timer3 = millis();
-        p++;
-        if (p > NUMBERTRACKS) {
-            p = 1;
-        }
         Serial.printf("Play Next - Track\n");
-        myDFPlayer.play(p); // Play next mp3 every 3 second.
+        myDFPlayer.play(1); // Play next mp3 every 3 second.
+        delay(6000);
     }
 }
 
