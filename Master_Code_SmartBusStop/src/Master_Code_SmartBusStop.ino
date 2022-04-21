@@ -37,7 +37,9 @@ int diodeNum;
 int nightLed;
 int motion;
 int AqSensor;
-int button;
+bool button;
+int oldButton;
+int onOff;
 float tempC, tempF;
 int hexAddress = 0x76;
 bool status;
@@ -68,6 +70,12 @@ Adafruit_MQTT_Publish mqttAqSensor = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "
 Adafruit_MQTT_Publish mqttTrashIsFull = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/Trash_Is_Full");
 
 SYSTEM_MODE(SEMI_AUTOMATIC);
+
+
+ unsigned int timer;
+ unsigned int timer2;
+    bool redState;
+    
 
 void setup() {
     Serial.begin(9600);
@@ -109,22 +117,43 @@ void loop() {
 
         motion = digitalRead(MOTIONSENSOR);
 
-         if (diodeNum > 3000) {
-        diodeNum = 3000;
-        }
-        if (diodeNum < 80) {
-        diodeNum = 80;
-         }
-         pixelBri = map(diodeNum, 80, 3000, 255, 0);
-         for (i = 0; i < 24; i++) {
-         strip.setBrightness(pixelBri);
-         strip.setPixelColor(i, 255, 241, 224);
-          strip.show();
-         }
+        //  if (diodeNum > 3000) {
+        // diodeNum = 3000;
+        // }
+        // if (diodeNum < 80) {
+        // diodeNum = 80;
+        //  }
+        //  pixelBri = map(diodeNum, 80, 3000, 255, 0);
+        //  for (i = 0; i < 24; i++) {
+        //  strip.setBrightness(pixelBri);
+        //  strip.setPixelColor(i, 255, 241, 224);
+        //   strip.show();
+        //  }
     //test, now delete
 
     button = digitalRead(EMERGENCYBUTTON);
-    if (button == 1) {
+    if(button != oldButton){
+        if(button == true){
+            onOff = !onOff;
+        } else{
+            oldButton = button;
+        }
+        Serial.printf("onOff:%i\n",onOff);
+    }
+    if (onOff == 1) {
+    timer2=millis();
+    if(millis()-timer2>10000){
+            onOff = false;
+    }
+    if(millis()-timer>1000){
+        redState= !redState; 
+        flashRed();
+        timer=millis();
+    }
+
+     
+
+       
         Serial.printf("Emergency button has been pressed.\n", button);
     }
 
@@ -229,4 +258,25 @@ void flashingLights() {
         }
     }
     strip.show();
+}
+
+void flashRed(){
+    int i;
+    int j;
+   
+
+    
+
+    for(j=0;j<24;j++){
+        if(redState){
+            strip.setPixelColor(j,0XFF0000);
+            strip.setBrightness(20);
+            strip.show();
+        }
+        if(redState==false){
+            strip.setPixelColor(j,0X0000000);
+            strip.setBrightness(20);
+            strip.show();
+        }
+    }
 }
