@@ -121,7 +121,7 @@ void loop() {
          strip.setPixelColor(i, 255, 241, 224);
           strip.show();
          }
-    
+    //test, now delete
 
     button = digitalRead(EMERGENCYBUTTON);
     if (button == 1) {
