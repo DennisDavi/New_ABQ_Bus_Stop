@@ -21,30 +21,39 @@ DFRobotDFPlayerMini myDFPlayer;
 void printDetail(uint8_t type, int value);
 const int playTime = 10000;
 const int numberTracks = 1;
+const int BUTTONSTATE = D4;
 bool status;
 int i,timer;
+int button;
+
 SYSTEM_MODE(SEMI_AUTOMATIC);
 
 void setup()
 {
   Serial1.begin(9600);
+  pinMode(BUTTONSTATE, INPUT);
+
  
   status = myDFPlayer.begin(Serial1,false);
  
-  myDFPlayer.volume(8);  //Set volume value. From 0 to 30
+  myDFPlayer.volume(25);  //Set volume value. From 0 to 30
   i=0;
-  timer = -playTime;p
+  timer = -playTime;
 }
 
 void loop() {
-  if (millis() - timer > playTime) {
+  
+  button = digitalRead(BUTTONSTATE);
+   if (button == 1){
+     if (millis() - timer > playTime) {
     timer = millis();
     i++;
     if(i>numberTracks) {
       i=1;
     }
-    Serial.printf("Play Next - Track %i\n",i);
+    Serial.printf("Play Next - Track\n");
     myDFPlayer.play(1);  //Play next mp3 every 3 second.
+  }
   }
   
   // if (myDFPlayer.available()) {
