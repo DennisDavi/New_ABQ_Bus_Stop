@@ -22,14 +22,15 @@ SYSTEM_MODE(SEMI_AUTOMATIC);
 void setup()
 {
   Serial1.begin(9600);
+  
   pinMode(BUTTONSTATE, INPUT);
 
  
   status = myDFPlayer.begin(Serial1,false);
  
-  myDFPlayer.volume(25);  //Set volume value. From 0 to 30
-  i=0;
-  timer = -playTime;
+   myDFPlayer.volume(25);  //Set volume value. From 0 to 30
+  // i=0;
+  // timer = -playTime;
 }
 
 void loop() {
@@ -43,7 +44,7 @@ void loop() {
       i=1;
     }
     Serial.printf("Play Next - Track\n");
-    myDFPlayer.play(1);  //Play next mp3 every 3 second.
+    myDFPlayer.play(i);  //Play next mp3 every 3 second.
   }
   }
   
