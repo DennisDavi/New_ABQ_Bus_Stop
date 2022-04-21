@@ -19,15 +19,15 @@
 
 #include "camera_pins.h"
 
-const char* ssid = "DDCIOT";
-const char* password = "ddcIOT2020";
+const char* ssid = "spam";
+const char* password = "spamfood";
 
 
 void startCameraServer();
 
 void setup() {
   
-  Serial.begin(115200);
+  Serial.begin(9600);
   Serial.setDebugOutput(true);
   Serial.println();
 
