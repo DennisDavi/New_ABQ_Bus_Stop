@@ -23,8 +23,8 @@ HX711 loadCell(D2, D13);
 const int FANPIN = D3;
 const int EMERGENCYBUTTON = D4;
 const int LEDPIN = D5;
-const int FLAMEPINDIGITAL = D6;
-const int MOTIONSENSOR = D7;
+//const int FLAMEPINDIGITAL = D6;
+const int MOTIONSENSOR = D6;
 
 Adafruit_BME280 bme;
 
@@ -71,7 +71,7 @@ SYSTEM_MODE(SEMI_AUTOMATIC);
 
 void setup() {
     Serial.begin(9600);
-    pinMode(FLAMEPIN, INPUT);
+   // pinMode(FLAMEPIN, INPUT);
     pinMode(MQ4ANALOGPIN, INPUT);
     pinMode(MQ7ANALOGPIN, INPUT);
     pinMode(PHOTODIODEPIN, INPUT);
@@ -102,30 +102,26 @@ void loop() {
 
     MQTT_connect();
 
-    motion = digitalRead(MOTIONSENSOR);
+    
     diodeNum = analogRead(PHOTODIODEPIN);
-    if (millis() - lastTime3 > 2000) {
-        if (motion == 0) {
-            strip.setPixelColor(i, 0, 0, 0);
-            strip.show();
-            Serial.printf("motion:%i\n", motion);
-        }
-        lastTime3 = millis();
-    }
+    //Serial.printf("motion:%i\n", motion);
 
-    if (diodeNum > 3000) {
+
+        motion = digitalRead(MOTIONSENSOR);
+
+         if (diodeNum > 3000) {
         diodeNum = 3000;
-    }
-    if (diodeNum < 80) {
+        }
+        if (diodeNum < 80) {
         diodeNum = 80;
-    }
-
-    pixelBri = map(diodeNum, 80, 3000, 255, 0);
-    for (i = 0; i < 24; i++) {
-        strip.setBrightness(pixelBri);
-        strip.setPixelColor(i, 255, 241, 224);
-        strip.show();
-    }
+         }
+         pixelBri = map(diodeNum, 80, 3000, 255, 0);
+         for (i = 0; i < 24; i++) {
+         strip.setBrightness(pixelBri);
+         strip.setPixelColor(i, 255, 241, 224);
+          strip.show();
+         }
+    
 
     button = digitalRead(EMERGENCYBUTTON);
     if (button == 1) {
@@ -157,12 +153,12 @@ void loop() {
             Serial.printf("Publishing Ultra Sonic Sensor  %i\n", ultraSonicSensor);
 
             // Flame Sensor
-            flameSensor = analogRead(FLAMEPIN);
-            if (flameSensor < 1500) {
-                Serial.printf("Flame Detected!");
-                mqttFire.publish(flameSensor);
-                Serial.printf("Publishing flameSensor:%i \n", flameSensor);
-            }
+            // flameSensor = analogRead(FLAMEPIN);
+            // if (flameSensor < 1500) {
+            //     Serial.printf("Flame Detected!");
+            //     mqttFire.publish(flameSensor);
+            //     Serial.printf("Publishing flameSensor:%i \n", flameSensor);
+            // }
 
             // Photo Diode Sensor
             mqttPhotoDiode.publish(diodeNum);
@@ -191,15 +187,13 @@ void loop() {
             lastTime1 = millis();
         }
     }
-    if ((millis() - lastTime2) > 2000) {
-        if (tempF > 69 && AqSensor < 3000) {
+        if (tempF > 69 && AqSensor < 1500) {
             digitalWrite(FANPIN, 1);
         } else {
             digitalWrite(FANPIN, 0);
         }
-        lastTime2 = millis();
-    }
 }
+
 
 void MQTT_connect() {
     int8_t ret;
