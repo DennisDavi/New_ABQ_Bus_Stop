@@ -45,7 +45,7 @@ int diodeNum;
 int nightLed;
 int motion;
 int AqSensor;
-int button;
+bool button;
 int oldButton;
 int onOff;
 float tempC, tempF;
@@ -56,13 +56,14 @@ int pixelCount = 24;
 int pixelType = WS2812B;
 int pixelBri;
 int ultraSonicSensor;
+int trashMesure;
 
 unsigned int timer;
 unsigned int timer2;
 bool redState;
 
 Adafruit_NeoPixel strip(pixelCount, LEDPIN, pixelType);
-const int CAL_FACTOR = 2233;
+const int CAL_FACTOR = 2333;
 const int SAMPLES = 10;
 float weight, rawData, calibration;
 int offset;
@@ -123,62 +124,57 @@ void setup() {
 void loop() {
 
     MQTT_connect();
+    long RangeInCentimeters;
 
     diodeNum = analogRead(PHOTODIODEPIN);
     // Serial.printf("motion:%i\n", motion);
 
     motion = digitalRead(MOTIONSENSOR);
 
-    //  if (diodeNum > 3000) {
-    // diodeNum = 3000;
-    // }
-    // if (diodeNum < 80) {
-    // diodeNum = 80;
-    //  }
-    //  pixelBri = map(diodeNum, 80, 3000, 255, 0);
-    //  for (i = 0; i < 24; i++) {
-    //  strip.setBrightness(pixelBri);
-    //  strip.setPixelColor(i, 255, 241, 224);
-    //   strip.show();
-    //  }
+     
     // test, now delete
 
-    // button = digitalRead(EMERGENCYBUTTON);
-    // if (button == 1) {
-    //     if (millis() - timer3 > PLAYTIME) {
-    //         timer3 = millis();
-    //         p++;
-    //         if (p > NUMBERTRACKS) {
-    //             p = 1;
-    //         }
-    //         Serial.printf("Play Next - Track\n");
-          
-    //     }
-    // }
+    button = digitalRead(EMERGENCYBUTTON);  
 
-    //     if (button == true) {
-    //         onOff = !onOff;
-    //     } else {
-    //         oldButton = button;
-    //     }
-    //     Serial.printf("onOff:%i\n", onOff);
-    // }
-    // if (onOff == 1) {
-    //     timer2 = millis();
-    //     if (millis() - timer2 > 10000) {
-    //         onOff = false;
-    //     }
-    //     if (millis() - timer > 1000) {
-    //         redState = !redState;
-    //         // FLASHRED
-    //         flashRed();
-    //         // mp3
-    //         mp3();
-    //         timer = millis();
-    //     }
+    if(button!=oldButton){
+        if (button == true) {
+            onOff = !onOff;
+        }
+            oldButton = button;
+        }
+        //Serial.printf("onOff:%i\n", onOff);
 
-    //     Serial.printf("Emergency button has been pressed.\n", button);
-    // }
+    if(onOff==0){
+        if (diodeNum > 3000) {
+    diodeNum = 3000;
+    }
+    if (diodeNum < 80) {
+    diodeNum = 80;
+     }
+     pixelBri = map(diodeNum, 80, 3000, 255, 0);
+     for (i = 0; i < 24; i++) {
+     strip.setBrightness(pixelBri);
+     strip.setPixelColor(i, 255, 241, 224);
+      strip.show();
+     }
+    }
+    
+    if (onOff == 1) {    
+        if (millis() - timer2 > 10000) {
+            onOff = false;
+            timer2 = millis();
+        }
+        if (millis() - timer > 1000) {
+            redState = !redState;
+            // FLASHRED
+            flashRed();
+            // mp3
+            mp3();
+            timer = millis();
+        }
+
+        Serial.printf("Emergency button has been pressed.\n", button);
+    }
 
     // Ultrasonic Sensor
     ultraSonicSensor = (ultrasonic.MeasureInCentimeters());
@@ -201,8 +197,9 @@ void loop() {
             Serial.printf("Publishing MQ4 level:: %i \n", mq4Analog);
 
             // Ultra Sonic
-            mqttUltraSonic.publish(ultraSonicSensor);
-            Serial.printf("Publishing Ultra Sonic Sensor  %i\n", ultraSonicSensor);
+            trashMesure = map(ultraSonicSensor,0,10,500,0);
+            mqttUltraSonic.publish(trashMesure);
+            Serial.printf("Publishing Ultra Sonic Sensor  %i\n", trashMesure);
 
             // Flame Sensor
             // flameSensor = analogRead(FLAMEPIN);
@@ -222,7 +219,7 @@ void loop() {
 
             // Load Cell Sensor
             mqttLoadCell.publish(weight);
-            Serial.printf("Publishing trash can weight:%i \n", weight);
+            Serial.printf("Publishing trash can weight:%0.2f \n", weight);
 
             // Air Quality Sensor
             AqSensor = analogRead(AQPIN);
@@ -286,26 +283,30 @@ void flashRed() {
     int i;
     int j;
 
-    for (j = 0; j < 24; j++) {
+   
         if (redState) {
+             for (j = 0; j < 24; j++) {
             strip.setPixelColor(j, 0XFF0000);
             strip.setBrightness(20);
             strip.show();
+             }
         }
         if (redState == false) {
-            strip.setPixelColor(j, 0X0000000);
+             for (j = 0; j < 24; j++) {
+            strip.setPixelColor(j, 0,0,0);
             strip.setBrightness(20);
             strip.show();
+             }
         }
     }
-}
+
 
 void mp3() {
         Serial.printf("Play Next - Track\n");
         myDFPlayer.play(1); // Play next mp3 every 3 second.
         delay(6000);
     }
-}
+
 
 void printDetail(uint8_t type, int value) {
     switch (type) {
