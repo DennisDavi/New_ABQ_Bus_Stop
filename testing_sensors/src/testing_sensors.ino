@@ -8,6 +8,7 @@
 #include <Adafruit_BME280.h>
 #include "Grove-Ultrasonic-Ranger.h"
 #include "math.h"
+#include "neopixel.h"
 
 SYSTEM_MODE(SEMI_AUTOMATIC)
 
@@ -17,7 +18,7 @@ int mq = A0;
 int mqSensor;
 int lastTime;
 int lastTime2;
-int button=A1;
+int button=D4;
 int oldButton;
 int buttonState;
 int AQpin=A4;
@@ -32,6 +33,12 @@ int hexAddress = 0x76;
 bool status;
 int motionPin=D7;
 int motion;
+int i;
+int pixelCount = 24;
+int pixelType = WS2812B;
+int pixelPin=D5;
+
+Adafruit_NeoPixel strip(pixelCount, pixelPin, pixelType);
 
 
 
@@ -45,6 +52,9 @@ void setup() {
   pinMode(fanPin,OUTPUT);
   pinMode(motionPin,INPUT);
 
+  strip.begin();
+  strip.show();
+
   status = bme.begin(hexAddress);
     if (status == false) {
         Serial.printf("BME280 at address 0x%02X failed to start", hexAddress);
@@ -55,6 +65,19 @@ void setup() {
 void loop() {
   tempC = bme.readTemperature();
   tempF = tempC * (9.0/5.0)+32.2;
+
+  for (i = 0; i < 12; i++) {
+         strip.setPixelColor(i, 255, 241, 224);
+          strip.show();
+         }
+
+    if (buttonState==1){
+      strip.clear();
+      for (i = 0; i < 12; i++) {
+         strip.setPixelColor(i, 255, 0, 0);
+          strip.show();
+         }
+    }
 
   
   if(millis()-lastTime2>10000){
@@ -73,11 +96,11 @@ AQSensor = analogRead(AQpin);
 motion=digitalRead(motionPin);
 
 if(millis()-lastTime>1000){
- Serial.printf("MQ-4: %i\n", mqSensor);
-// Serial.printf("button:%i\n",buttonState);
- Serial.printf("AQSensor%i\n",AQSensor);
-Serial.printf("Temp F:%0.2f\n",tempF);
-Serial.printf("motion:%i\n",motion);
+ //Serial.printf("MQ-4: %i\n", mqSensor);
+Serial.printf("button:%i\n",buttonState);
+//  Serial.printf("AQSensor%i\n",AQSensor);
+// Serial.printf("Temp F:%0.2f\n",tempF);
+// Serial.printf("motion:%i\n",motion);
 lastTime=millis();
 if(buttonState==1){
   Serial.printf("Emergancy button has been pressed, please send a response unit to station 1\n",buttonState);
