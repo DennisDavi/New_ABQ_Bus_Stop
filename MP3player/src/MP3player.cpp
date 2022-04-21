@@ -3,7 +3,7 @@
 /******************************************************/
 
 #include "Particle.h"
-#line 1 "c:/Users/DennisDavis/Documents/IoT/New_ABQ_Bus_Stop/MP3player/src/MP3player.ino"
+#line 1 "/Users/Abeyta/Documents/IoT/New_ABQ_Bus_Stop/MP3player/src/MP3player.ino"
 /*
  * Project MP3player
  * Description: Argon-based code for DFPlayer Mini Player
@@ -16,11 +16,11 @@
 
 void setup();
 void loop();
-#line 11 "c:/Users/DennisDavis/Documents/IoT/New_ABQ_Bus_Stop/MP3player/src/MP3player.ino"
+#line 11 "/Users/Abeyta/Documents/IoT/New_ABQ_Bus_Stop/MP3player/src/MP3player.ino"
 DFRobotDFPlayerMini myDFPlayer;
 void printDetail(uint8_t type, int value);
 const int playTime = 10000;
-const int numberTracks = 7;
+const int numberTracks = 1;
 bool status;
 int i,timer;
 SYSTEM_MODE(SEMI_AUTOMATIC);
@@ -28,25 +28,12 @@ SYSTEM_MODE(SEMI_AUTOMATIC);
 void setup()
 {
   Serial1.begin(9600);
-  Serial.begin(9600);
-  delay(2000);
-  
-  Serial.printf("DFRobot DFPlayer Mini Demo \nInitializing DFPlayer ... (May take 3~5 seconds)\n");
-
+ 
   status = myDFPlayer.begin(Serial1,false);
-  Serial.printf("Status = %i\n",status);
-  
-  if (!status) {
-    Serial.printf("Unable to begin:\n");
-    Serial.printf("1.Please recheck the connection!\n");
-    Serial.printf("2.Please insert the SD card!\n");
-    while(true);
-  }
-  Serial.printf("DFPlayer Mini online.\n");
-  
-  myDFPlayer.volume(0.1);  //Set volume value. From 0 to 30
+ 
+  myDFPlayer.volume(8);  //Set volume value. From 0 to 30
   i=0;
-  timer = -playTime;
+  timer = -playTime;p
 }
 
 void loop() {
@@ -57,12 +44,12 @@ void loop() {
       i=1;
     }
     Serial.printf("Play Next - Track %i\n",i);
-    myDFPlayer.play(i);  //Play next mp3 every 3 second.
+    myDFPlayer.play(1);  //Play next mp3 every 3 second.
   }
   
-  if (myDFPlayer.available()) {
-    printDetail(myDFPlayer.readType(), myDFPlayer.read()); //Print the detail message from DFPlayer to handle different errors and states.
-  }
+  // if (myDFPlayer.available()) {
+  //   printDetail(myDFPlayer.readType(), myDFPlayer.read()); //Print the detail message from DFPlayer to handle different errors and states.
+  // }
 }
 
 void printDetail(uint8_t type, int value){
